@@ -1,0 +1,91 @@
+- hosts: 127.0.0.1
+  connection: local
+  gather_facts: no
+
+  vars_files:
+    - ./user-dictionary.yml
+
+  tasks:
+
+  - name: Creating IAM group "aws_group_dev"
+    iam_group:
+      name: "aws_group_dev"
+      managed_policy:
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser
+      state: present
+      
+  - name: Configure and add users to the IAM group "aws_group_dev"
+    iam_group:
+      name: "aws_group_dev"
+      users: "{{ item.name }}"
+      state: present
+    loop: "{{ users }}"
+    when: 
+      - "'aws_group_dev' in item.group"
+      - item.status == "active"
+      - item.group|length > 1
+
+  - name: Create and configure Policy in group "aws_group_dev"
+    iam_policy:
+      iam_type: group
+      iam_name: "aws_group_dev"
+      policy_name: iam-policy-developer
+      state: present
+      policy_document: "../../policies/iam/iam-policy-developer.json"
+####################################################################
+  - name: Creating IAM group "aws_group_data"
+    iam_group:
+      name: "aws_group_data"
+      managed_policy:
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+      state: present
+      
+  - name: Configure and add users the IAM group "aws_group_data"
+    iam_group:
+      name: "aws_group_data"
+      users: "{{ item.name }}"
+      state: present
+    loop: "{{ users }}"
+    when: 
+      - "'aws_group_data' in item.group"
+      - item.status == "active"
+      - item.group|length > 1
+####################################################################
+  - name: Creating IAM group "aws_group_po"
+    iam_group:
+      name: "aws_group_po"
+      managed_policy:
+        - arn:aws:iam::aws:policy/AWSConfigUserAccess
+        - arn:aws:iam::aws:policy/ReadOnlyAccess
+      state: present
+
+  - name: Configure and add users the IAM group "aws_group_po"
+    iam_group:
+      name: "aws_group_po"
+      users: "{{ item.name }}"
+      state: present
+    loop: "{{ users }}"
+    when: 
+      - "'aws_group_po' in item.group"
+      - item.status == "active"
+      - item.group|length > 1
+####################################################################
+  - name: Creating IAM group "aws_group_devops"
+    iam_group:
+      name: "aws_group_devops"
+      managed_policy:
+        - arn:aws:iam::aws:policy/PowerUserAccess
+        - arn:aws:iam::aws:policy/IAMFullAccess
+        - arn:aws:iam::aws:policy/AWSKeyManagementServicePowerUser
+      state: present
+      
+  - name: Configure and add users the IAM group "aws_group_devops"
+    iam_group:
+      name: "aws_group_devops"
+      users: "{{ item.name }}"
+      state: present
+    loop: "{{ users }}"
+    when: 
+      - "'aws_group_devops' in item.group"
+      - item.status == "active"
+      - item.group|length > 1

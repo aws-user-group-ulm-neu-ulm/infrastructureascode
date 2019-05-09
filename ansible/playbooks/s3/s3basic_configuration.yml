@@ -1,0 +1,238 @@
+- hosts: 127.0.0.1
+  connection: local
+  gather_facts: no
+  vars:
+    aws_region: "eu-west-1" #this defines the default AWS Region
+    aws_env: "int" #this shows the stage (dev, test, int, prod)
+    owner: "Dept 0800" #this may a default department id or an personal owner for tagging
+    bucket_prefix: "foo-your-userdefined-name-com-" #this can be used for the bucket name prefix
+
+####################################################################################################################
+# these items are for the various buckets to define; variables from outside also possible
+####################################################################################################################
+# config_buckets = buckets for AWS Config to store the cmdb files from AWS Config !AWS Region-dependent!
+    config_buckets:
+      - {"bucketname": "{{ bucket_prefix }}config", "Owner": "Dept 0801", "Type": "Inventory"}
+# accesslog_bucket = buckets for the S3 Server Access Log Files !AWS Region-dependent!
+    accesslog_bucket:
+      - {"bucketname": "{{ bucket_prefix }}accesslogs", "Owner": "Dept 0801", "Type": "Logging"}
+# terraform_bucket = buckets for terraform backends if you use terraform
+    terraform_bucket:
+      - {"bucketname": "{{ bucket_prefix }}tfstate", "Owner": "Dept 0801", "Type": "Logging"}
+# inventory_bucket = bucket for a file inventory automaticly provided by AWS S3 Service
+    inventory_bucket:
+      - {"bucketname": "{{ bucket_prefix }}inventory", "Owner": "Dept 0802", "Type": "Inventory"}
+# system_buckets = buckets for your projects - non ops relevent
+    system_buckets:
+       - {"bucketname": "{{ bucket_prefix }}app", "Owner": "Dept 0803", "Type": "System"}
+# expire_by_days_buckets = buckets for this demo with a file retention of x days
+    expire_by_days_buckets:
+       - {"bucketname": "{{ bucket_prefix }}temp"}
+# test_buckets = buckets where content deleted after 1 day (may as a file share usable)
+    test_buckets:
+      - {"bucketname": "{{ bucket_prefix }}test", "Owner": "Dept 0801", "Type": "Test"}
+  tasks:
+
+# Launching the AWS Config bucket
+
+  - name: Config S3 AWS Config Bucket
+    s3_bucket:
+      region:           '{{ aws_region }}'
+      name:             "{{ item.bucketname }}"
+      tags:
+        Name:           "s3_{{ item.bucketname }}"
+        Owner:          "{{ item.Owner }}"
+        Environment:    "{{ aws_env }}"
+        Type:           "{{ item.Type }}"
+      state: present
+      force: no
+      policy: "{{ lookup('file','../../policies/s3/s3-policy-config.json') }}"
+    with_items:
+      - "{{ config_buckets }}"
+
+# Launching the AWS Accesslog Bucket inclusive lifecycle_hook of 90 days
+
+  - name: Config S3 AWS Accesslogs Bucket
+    s3_bucket:
+      region:           '{{ aws_region }}'
+      name:             "{{ item.bucketname }}"
+      tags:
+        Name:           "s3_{{ item.bucketname }}"
+        Owner:          "{{ item.Owner }}"
+        Environment:    "{{ aws_env }}"
+        Type:           "{{ item.Type }}"
+      state: present
+      force: no
+      policy: "{{ lookup('file','../../policies/s3/s3-policy-accesslogs.json') }}"
+    with_items:
+      - "{{ accesslog_bucket }}"
+
+  - name: Config S3 AWS Accesslog Bucket Lifecycle Rule
+    s3_lifecycle:
+      region:         '{{ aws_region }}'
+      name:           "{{ item.bucketname }}"
+      expiration_days: 90
+      prefix: ""
+      status: enabled
+      state: present
+    with_items:
+      - "{{ accesslog_bucket }}"
+
+# Launching terraform backend bucket for backend use
+
+  - name: Config S3 Terraform State Bucket
+    s3_bucket:
+      region:           '{{ aws_region }}'
+      name:             "{{ item.bucketname }}"
+      tags:
+        Name:           "s3_{{ item.bucketname }}"
+        Owner:          "{{ item.Owner }}"
+        Environment:    "{{ aws_env }}"
+        Type:           "{{ item.Type }}"
+      state: present
+      force: no
+      versioning: yes
+      policy: "
+          {
+            \"Version\": \"2012-10-17\",
+            \"Statement\": [
+              {
+                \"Action\":  \"s3:*\",
+                \"Effect\": \"Deny\",
+                \"Resource\": \"arn:aws:s3:::{{ item.bucketname }}/*\",
+                \"Principal\": \"*\",
+                \"Condition\": {\"Bool\":{\"aws:SecureTransport\":\"false\"}}
+              }
+            ]
+          }
+      "
+    with_items:
+      - "{{ terraform_bucket }}"
+
+# Launching the AWS Inventory Bucket
+
+  - name: Config S3 AWS Inventory Bucket
+    s3_bucket:
+      region:           '{{ aws_region }}'
+      name:             "{{ item.bucketname }}"
+      tags:
+        Name:           "s3_{{ item.bucketname }}"
+        Owner:          "{{ item.Owner }}"
+        Environment:    "{{ aws_env }}"
+        Type:           "{{ item.Type }}"
+      state: present
+      force: no
+      policy: "{{ lookup('file','../../policies/s3/s3-policy-inventory.json') }}"
+    with_items:
+      - "{{ inventory_bucket }}"
+
+# Launching System Buckets - Project or APP relevant
+
+  - name: Config S3 AWS System Buckets - <describe your use case>
+    s3_bucket:
+      region:           '{{ aws_region }}'
+      name:             "{{ item.bucketname }}"
+      tags:
+        Name:           "s3_{{ item.bucketname }}"
+        Owner:          "{{ item.Owner }}"
+        Environment:    "{{ aws_env }}"
+        Type:           "{{ item.Type }}"
+      state: present
+      force: no
+      policy: "
+          {
+            \"Version\": \"2012-10-17\",
+            \"Statement\": [
+              {
+                \"Action\":  \"s3:*\",
+                \"Effect\": \"Deny\",
+                \"Resource\": \"arn:aws:s3:::{{ item.bucketname }}/*\",
+                \"Principal\": \"*\",
+                \"Condition\": {\"Bool\":{\"aws:SecureTransport\":\"false\"}}
+              }
+            ]
+          }
+      "
+    with_items:
+      - "{{ system_buckets }}"
+
+# Launching Test Bucket - Project non-relevant - File delete after 1 day
+
+  - name: Config S3 AWS System Buckets - Test
+    s3_bucket:
+      region:           '{{ aws_region }}'
+      name:             "{{ item.bucketname }}"
+      tags:
+        Name:           "s3_{{ item.bucketname }}"
+        Owner:          "{{ item.Owner }}"
+        Environment:    "{{ aws_env }}"
+        Type:           "{{ item.Type }}"
+      state: present
+      force: no
+      policy: "
+          {
+            \"Version\": \"2012-10-17\",
+            \"Statement\": [
+              {
+                \"Action\":  \"s3:*\",
+                \"Effect\": \"Deny\",
+                \"Resource\": \"arn:aws:s3:::{{ item.bucketname }}/*\",
+                \"Principal\": \"*\",
+                \"Condition\": {\"Bool\":{\"aws:SecureTransport\":\"false\"}}
+              }
+            ]
+          }
+      "
+    with_items:
+      - "{{ test_buckets }}"
+
+  - name: Config S3 AWS Test Bucket Lifecycle Rule
+    s3_lifecycle:
+      region:         '{{ aws_region }}'
+      name: "{{ item.bucketname }}"
+      transition_days: 0
+      expiration_days: 1
+      prefix: ""
+      status: enabled
+      state: present
+    with_items:
+      - "{{ test_buckets }}"
+
+# enable s3 server access logging for s3 buckets
+  - name: Config system buckets with a target for access logs
+    s3_logging:
+      region:        '{{ aws_region }}'
+      name:          "{{ item.bucketname }}"
+      target_bucket: "{{ bucket_prefix }}accesslogs"
+      target_prefix: "{{ item.bucketname }}/"
+    with_items:
+      - "{{ system_buckets }}"
+
+# enable s3 bucket SSE (Server Side Encryption) for all S3 Buckets
+  - name: Set the SSE flag for all S3 buckets
+    shell: >
+      aws s3api put-bucket-encryption --bucket "{{ item.bucketname }}" --cli-input-json '{"ServerSideEncryptionConfiguration":{"Rules":[{"ApplyServerSideEncryptionByDefault":{"SSEAlgorithm":"AES256"}}]}}'
+    changed_when: false
+    register: s3sse
+    until: s3sse.rc == 0
+    retries: 2
+    delay: 3
+    with_items:
+      - "{{ config_buckets }}"
+      - "{{ accesslog_bucket }}"
+      - "{{ inventory_bucket }}"
+      - "{{ system_buckets }}"
+      - "{{ test_buckets }}"
+      - "{{ terraform_bucket }}"
+
+# enable s3 bucket Inventory Generation for S3 Buckets (only project relevant buckets)
+  - name: Set the S3 inventory for all S3 buckets
+    shell: >
+      aws s3api put-bucket-inventory-configuration --bucket "{{ item.bucketname }}" --id v1 --inventory-configuration '{"Destination":{"S3BucketDestination":{"Bucket":"arn:aws:s3:::foo-your-userdefined-name-com-inventory","Format":"ORC"}},"IsEnabled":true,"Id":"v1","IncludedObjectVersions":"Current","OptionalFields":["Size","LastModifiedDate","StorageClass","ETag","IsMultipartUploaded","ReplicationStatus","EncryptionStatus"],"Schedule":{"Frequency":"Daily"}}'
+    changed_when: false
+    register: s3inv
+    until: s3inv.rc == 0
+    retries: 2
+    delay: 3
+    with_items:
+      - "{{ system_buckets }}"

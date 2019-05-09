@@ -1,0 +1,46 @@
+users:
+######### User Entry for developer1
+  - name: devuser1
+    status: active #active|inactive
+    region: emea
+    email:
+    pub_key: "ssh-rsa PrM2UGk6U4N2JDFncahn9W21KRL9bKamyiBzKvTKtmr3K39Dqd3eMzCiY2i1nx6L4e+MAi9CGBA3/2w/951EfcwN1Z8CZZL7gjLXQQEd+RoeMcqLsGSWDyWhnOaXs930351inGIy/QGWwvEV6QpqUiJgIt+G3EJfvgMG+RE1Us0="
+    group:
+      - aws_group_dummy
+      - aws_group_dev
+######### User Entry for developer2
+  - name: devuser2
+    status: active #active|inactive
+    region: emea
+    email:
+    pub_key: "ssh-rsa TZaEuqZlcTLjRYISnyLTQfZxi9XCKcY62cxoqADnXUCGBzdRhzjQMvd/AlRgI02D9DqgvLmrNYzf8F9FhDv84KPg2vv9YzOIm89q3eNQ/g0FNlgTBIK0rac+q6e0Y8r3iIaRas+AspYSXLJTBFmnSYyazMwL9uBjjZUfG6Bls0w="
+    group:
+      - aws_group_dummy
+      - aws_group_dev
+######### User Entry for data architect
+  - name: datauser
+    status: active #active|inactive
+    region: emea
+    email:
+    pub_key: "ssh-rsa PCrvgDb8O+ZZOK217CXLpBeN//Fqzc7jPUqray5YopU2ou1pEYGix+xgVCvIslzFOaMxuPLqnjOQAr+QmrnuYymohKSYDnu0TTv29cf04tdUaaiLCijrjmTJM67+sbeoRkVo9AlfsOfuiEfRqRcsybvsk1+yNRDp8szpwblmXxg="
+    group:
+      - aws_group_dummy
+      - aws_group_data
+######### User Entry for product owner
+  - name: productuser
+    status: active #active|inactive
+    region: emea
+    email:
+    pub_key: "ssh-rsa PCrvgDb8O+ZZOK217CXLpBeN//Fqzc7jPUqray5YopU2ou1pEYGix+xgVCvIslzFOaMxuPLqnjOQAr+QmrnuYymohKSYDnu0TTv29cf04tdUaaiLCijrjmTJM67+sbeoRkVo9AlfsOfuiEfRqRcsybvsk1+yNRDp8szpwblmXxg="
+    group:
+      - aws_group_dummy
+      - aws_group_po
+#########  User Entry for devops engineer
+  - name: devopsuser
+    status: active #active|inactive
+    region: emea
+    email:
+    pub_key: "ssh-rsa NGqvJBxenlCNR9Hn5NHyxT97d9cHakwXQtfXdnS8FXddqMNal+KZqqBK+ujWxdUeWAkj8vtlxMzQWeZ/4gqvSHIwHQa3ohnaQ7uj9G1+wIn2sjjQm3fp+VpZEr7uOdLZL+wzzPojkj7xlIHuD4R2sbJAPaewjRSDR62Sf/kekE8="
+    group:
+      - aws_group_dummy
+      - aws_group_devops

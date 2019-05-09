@@ -1,0 +1,11 @@
+- hosts: 127.0.0.1
+  connection: local
+  gather_facts: no
+  vars_files:
+    - group_vars/common.yml
+
+  roles:
+    - ../roles/vpc
+    - ../roles/subnets
+    - ../roles/gateway
+    - ../roles/securitygroups
