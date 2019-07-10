@@ -9,7 +9,7 @@ Installing Visual Studio Code on Ubuntu
 * First, update the packages index and install the dependencies by typing
 ```sh
 $ sudo apt update
-$ sudo apt updatesudo apt install software-properties-common apt-transport-https wget
+$ sudo apt install software-properties-common apt-transport-https wget
 ```
 * Next, import the Microsoft GPG key using the following wget command:
 ```sh
