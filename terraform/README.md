@@ -6,7 +6,7 @@ Using the terraform provider modules of AWS for configure, build and remove ress
 
 These instructions will get you a to a point, using an terraform plan/apply command to build stuff inside AWS.
 
-* ..in progress
+* Creating and Configuration of a fully running example of having S3 and Cloudfront as a webserver [cdn](cdn)
 
 ### Prerequisites
 

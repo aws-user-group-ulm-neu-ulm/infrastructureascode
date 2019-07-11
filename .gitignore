@@ -1,1 +1,13 @@
-
+# Local .terraform directories
+**/.terraform/*
+# .tfstate files
+*.tfstate
+*.tfstate.*
+*.exe
+terraform.tfstate
+terraform.tfstate.backup
+# .Ansible log files and retries
+*.backup
+*.retry
+# .Index Files for html example
+index/*
